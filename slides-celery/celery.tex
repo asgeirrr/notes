@@ -1,0 +1,184 @@
+\documentclass[xcolor=x11names,compress,t]{beamer}
+
+%% General document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage[compatibility=false]{caption}
+\usepackage{subcaption}
+\usepackage[utf8x]{inputenc}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\usepackage{minted}
+\hypersetup{
+  pdfauthor={Oskar Hollmann},
+  pdftitle={Celery},
+  breaklinks,
+  colorlinks=true,
+  linkcolor=DeepSkyBlue4,
+  urlcolor=DeepSkyBlue4,
+}
+
+%% Beamer Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\useoutertheme[subsection=false,shadow]{miniframes}
+\setbeamertemplate{navigation symbols}{}%remove navigation symbols
+
+    \defbeamertemplate{footline}{author and page number}{%
+      \usebeamercolor[fg]{page number in head/foot}%
+      \usebeamerfont{page number in head/foot}%
+      \hspace{1em}\insertshortauthor\hfill%
+      \insertpagenumber\,/\,\insertpresentationendpage\kern1em\vskip2pt%
+    }
+    \setbeamertemplate{footline}[author and page number]{}
+
+\useinnertheme{default}
+\usefonttheme{serif}
+\usepackage{kpfonts} % originally palatino font was used
+\usepackage{verbatim}
+\renewcommand*\ttdefault{cmtt}
+
+\setlength{\leftmargini}{0pt} % reduce itemize margin
+\setlength{\leftmargin}{0pt} % reduce standard text margin
+
+% Use small-caps in appropriate places
+\setbeamerfont{title like}{shape=\scshape}
+\setbeamerfont{frametitle}{shape=\scshape}
+\setbeamerfont{section in head/foot}{shape=\scshape}
+
+% Colour settings
+\setbeamercolor*{lower separation line head}{bg=DeepSkyBlue4} 
+\setbeamercolor*{normal text}{fg=black,bg=white} 
+\setbeamercolor*{alerted text}{fg=red} 
+\setbeamercolor*{example text}{fg=black} 
+\setbeamercolor*{structure}{fg=black} 
+\setbeamercolor*{palette tertiary}{fg=black,bg=black!10} 
+\setbeamercolor*{palette quaternary}{fg=black,bg=black!10} 
+
+% Fix incorrect alignment of itemize in right columns
+\makeatletter
+\define@key{beamerframe}{t}[true]{% top
+  \beamer@frametopskip=0cm plus 0\paperheight\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=\beamer@frametopskip\relax%
+  \beamer@framebottomskipautobreak=\beamer@framebottomskip\relax%
+  \def\beamer@initfirstlineunskip{}%
+}
+\makeatother
+
+% Shortcuts for the column environment
+\renewcommand{\(}{\begin{columns}[T]}
+\renewcommand{\)}{\end{columns}}
+\newcommand{\<}[1]{\begin{column}{#1}}
+\renewcommand{\>}{\end{column}}
+
+\newenvironment{slide}[1]{\subsection{#1} \begin{frame}{#1}}{\end{frame}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Celery}
+\subtitle{A Distributed Task Queue}
+\author[Oskar Hollmann]{\vspace{0.3em}\includegraphics[width=0.2\textwidth]{celery-logo}\\Oskar Hollmann}
+\institute{User Technologies}
+\date{26.10.2016}
+
+\begin{document}
+
+\maketitle
+
+\section{Motivation}
+
+\begin{slide}{Motivation}
+    \begin{itemize} 
+        \item time demanding tasks are a pain in web apps
+            \begin{itemize}
+                \item HTTP request can easily time out
+                \item it's not acceptable to block the client for too long
+                \item client may not care about the result
+            \end{itemize}
+        \item either we return an URL to the client who polls it later to get the result
+        \item or we push it through web sockets
+        \item how can we achieve that?
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Motivation}
+    \vspace{5em}
+    \centering 
+    {\Huge Node.js to the rescue!}
+    \includegraphics[height=9em]{nodejs-logo}
+\end{slide}
+
+\begin{slide}{Motivation}
+    \vspace{1em}
+    \centering 
+    {\large \emph{Node.js is cool, but...}}
+    \vspace{1em}
+    \begin{itemize} 
+        \item Why use Node.js and struggle with async code when async operations are seldom needed in a web app?
+        \item Async code is not enough -- we might need to distribute the tasks, run them periodically, \dots
+        \item Node.js programmers are a rare commodity.
+        \item What we actually need is \textbf{an asynchronous task queue}.
+        \item Examples: RabbitMQ, JMS, Celery, \dots
+    \end{itemize}
+
+    \vspace{1em}
+    \includegraphics[height=2em]{rabbitmq-logo}\hspace{2em}\includegraphics[height=2em]{celery-logo-long}
+\end{slide}
+
+
+\begin{slide}{Use Cases of Distributed Task Queues}
+    \begin{enumerate}
+        \item Non-blocking task execution.
+        \item Task execution with failure recovery.
+        \item Concurrent task execution for single-threaded apps.
+        \item Distribute task to other machines.
+        \item Handle complex task workflows with dependencies.
+        \item Periodic tasks.
+    \end{enumerate}
+\end{slide}
+
+
+\section{About Celery}
+\begin{slide}{Task Queue in Web App}
+    \begin{figure}
+        \includegraphics[scale=0.42]{django-celery-architecture}
+        \caption{Source \href{http://en.proft.me/2013/10/25/celery-periodic-tasks-django-projects/}{en.proft.me}}
+    \end{figure}
+\end{slide}
+
+\begin{slide}{Celery is}
+    \begin{itemize}
+        \item distributed task queue written in Python
+        \item bindings for: PHP, Ruby, NodeJS and more
+        \item different message broker transports: Redis, RabbitMQ, MongoDB and more
+        \item arbitrary number of queues and workers
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Workers and Queues}
+    \begin{figure}
+        \includegraphics[scale=0.45]{celery-queues-and-workers}
+        \caption{Source \href{https://abhishek-tiwari.com/post/amqp-rabbitmq-and-celery-a-visual-guide-for-dummies}{abhishek-tiwari.com}}
+    \end{figure}
+\end{slide} 
+
+\section{Case Study} 
+\begin{slide}{Problem Specification}
+    \begin{itemize}
+        \item We have an online payment method where each order must go through non-trivial scoring process.
+        \item Problems with synchronous code:
+        \begin{itemize}
+            \item Scoring may take up tu a minute.
+            \item The computation is resource-heavy and must not affect processing of new orders.
+            \item To increase throughput of the app, different scoring tasks must be run concurrently.
+            \item Scoring cannot run in parallel for one customer.
+        \end{itemize}
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Implementation in Celery}
+
+\end{slide}
+
+\begin{slide}{Task Orchestration}
+\end{slide} 
+
+\end{document}

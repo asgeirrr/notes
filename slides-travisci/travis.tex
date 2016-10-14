@@ -1,0 +1,231 @@
+\documentclass[xcolor=x11names,compress,t]{beamer}
+
+%% General document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage[compatibility=false]{caption}
+\usepackage{subcaption}
+\usepackage[utf8x]{inputenc}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\usepackage{minted}
+\hypersetup{
+  pdfauthor={Oskar Hollmann},
+  pdftitle={Travis CI},
+  breaklinks,
+  colorlinks=true,
+   linkcolor=black,
+}
+
+%% Beamer Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\useoutertheme[subsection=false,shadow]{miniframes}
+\setbeamertemplate{navigation symbols}{}%remove navigation symbols
+
+    \defbeamertemplate{footline}{author and page number}{%
+      \usebeamercolor[fg]{page number in head/foot}%
+      \usebeamerfont{page number in head/foot}%
+      \hspace{1em}\insertshortauthor\hfill%
+      \insertpagenumber\,/\,\insertpresentationendpage\kern1em\vskip2pt%
+    }
+    \setbeamertemplate{footline}[author and page number]{}
+
+\useinnertheme{default}
+\usefonttheme{serif}
+\usepackage{kpfonts} % originally palatino font was used
+\usepackage{verbatim}
+\renewcommand*\ttdefault{cmtt}
+
+\setlength{\leftmargini}{0pt} % reduce itemize margin
+\setlength{\leftmargin}{0pt} % reduce standard text margin
+
+% Use small-caps in appropriate places
+\setbeamerfont{title like}{shape=\scshape}
+\setbeamerfont{frametitle}{shape=\scshape}
+\setbeamerfont{section in head/foot}{shape=\scshape}
+
+% Colour settings
+\setbeamercolor*{lower separation line head}{bg=DeepSkyBlue4} 
+\setbeamercolor*{normal text}{fg=black,bg=white} 
+\setbeamercolor*{alerted text}{fg=red} 
+\setbeamercolor*{example text}{fg=black} 
+\setbeamercolor*{structure}{fg=black} 
+\setbeamercolor*{palette tertiary}{fg=black,bg=black!10} 
+\setbeamercolor*{palette quaternary}{fg=black,bg=black!10} 
+
+% Fix incorrect alignment of itemize in right columns
+\makeatletter
+\define@key{beamerframe}{t}[true]{% top
+  \beamer@frametopskip=0cm plus 0\paperheight\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=\beamer@frametopskip\relax%
+  \beamer@framebottomskipautobreak=\beamer@framebottomskip\relax%
+  \def\beamer@initfirstlineunskip{}%
+}
+\makeatother
+
+% Shortcuts for the column environment
+\renewcommand{\(}{\begin{columns}[T]}
+\renewcommand{\)}{\end{columns}}
+\newcommand{\<}[1]{\begin{column}{#1}}
+\renewcommand{\>}{\end{column}}
+
+\newenvironment{slide}[1]{\subsection{#1} \begin{frame}{#1}}{\end{frame}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Travis CI\\\vspace{0.3em}\includegraphics[width=80pt]{./travis-logo.png}}
+\subtitle{Continuous Integration}
+\author[Oskar Hollmann]{Oskar Hollmann}
+\institute{User Technologies}
+\date{26.5.2016}
+
+\begin{document}
+
+\maketitle
+\setbeamertemplate{logo}{\includegraphics[height=0.8cm]{./travis-logo.png}}
+
+\section{Motivation}
+
+\begin{slide}{Have you met Mr. Travis?}
+\begin{itemize}
+	\item Travis is a Continuous Integration platform,
+    \item free for open-source projects,
+    \item developed in Berlin, Germany since 2011,
+    \item used by prominent projects such as Node.js or Ruby on Rails.
+\end{itemize}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.7\textwidth]{ci}
+    \caption{Continuous Integration diagram [\href{http://www.360logica.com/blog/2014/06/continuous-integration.html}{360logica.com}].}
+\end{figure}
+\end{slide}
+
+\begin{slide}{What can Travis do for you?}
+\begin{enumerate}
+	\item Automatically build Git repositories or pull requests.
+    \item Run all tests.
+    \item Integrate code coverage tools and code quality checks.
+    \item Deploy the code on AWS, Heroku, PyPi, RubyGems, \dots
+\end{enumerate}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.7\textwidth]{ci-travis-parts}
+    \caption{Continuous Integration diagram}
+\end{figure}
+\end{slide}
+
+\section{Using Travis}
+\begin{slide}{1. Detection of pull request}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{detection-github}
+    \caption{Travis CI integrates nicely with GitHub.}
+\end{figure}
+\end{slide}
+
+\begin{slide}{2. Test runs}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{detection-travis}
+    \caption{Tests are run using chosen versions of languages and libraries.}
+\end{figure}
+\end{slide}
+
+\begin{slide}{2. Test runs}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{success-travis}
+\end{figure}
+\end{slide}
+
+\begin{slide}{3. Report results}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{success-github}
+\end{figure}
+\vspace{-0.5em}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{success-email}
+    \caption{Results are pushed to Github and e-mail.}
+\end{figure}
+\end{slide}
+
+\section{Configuration}
+
+\subsection{}
+\begin{frame}[fragile]{Configuration}
+\begin{itemize}
+    \item Tests run in a sandboxed Ubuntu Docker image.
+    \item Configuration contained in a single \textbf{.travis.yml} file.
+    \item Many stages of the test ran can be customised:
+    \begin{itemize}
+      \item \verb+addons+
+      \item \verb+before_install+
+      \item \verb+install+
+      \item \verb+before_script+
+      \item \verb+script+
+      \item \verb+after_success/after_failure+
+      \item \verb+before_deploy/deploy/after_deploy+
+      \item \verb+after_script+
+    \end{itemize}
+\end{itemize}
+\begin{minted}[frame=single]{yaml}
+addons:
+  apt:
+    packages:
+    - cmake
+\end{minted}
+\end{frame}
+
+\subsection{}
+\begin{frame}[fragile]{Example Configuration File}
+\begin{minted}[frame=single]{yaml}
+language: python
+
+# Which version of the language to support?
+python:
+  - "2.7"
+  - "3.5"
+
+# Enviroment variables can be used to setup builds
+# and test multiple versions of libraries
+env:
+  - DJANGO_VERSION=1.7
+  - DJANGO_VERSION=1.8
+  - DJANGO_VERSION=1.9
+\end{minted}
+\end{frame}
+
+\subsection{}
+\begin{frame}[fragile]{Example Configuration File}
+\begin{minted}[frame=single]{yaml}
+# All combinations of env. vars are tested
+matrix:
+  exclude: # But some may not be supported
+    - python: "3.3"
+      env: DJANGO_VERSION=1.9
+
+# Install required dependencies
+install:
+  - cd example
+  - pip install -r requirements/base.txt
+  - pip uninstall -y -q django
+  - pip install -q Django==$DJANGO_VERSION
+
+# We can override the default build step
+script:
+   coverage run manage.py test app.tests
+\end{minted}
+\end{frame}
+
+\begin{slide}{}
+\vspace{5em}
+\centering
+\Large
+Thank you for your attention.
+
+\vspace{5em}
+
+Any questions?
+\end{slide}
+\end{document}
