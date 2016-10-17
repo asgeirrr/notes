@@ -7,7 +7,7 @@
 \usepackage[utf8x]{inputenc}
 \usepackage{wrapfig}
 \usepackage{hyperref}
-\usepackage{minted}
+\usepackage[linenos]{minted}
 \hypersetup{
   pdfauthor={Oskar Hollmann},
   pdftitle={Celery},
@@ -70,7 +70,7 @@
 \renewcommand{\>}{\end{column}}
 
 \newenvironment{slide}[1]{\subsection{#1} \begin{frame}{#1}}{\end{frame}}
-
+\newmintedfile[pythonfile]{python}{linenos}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \title{Celery}
@@ -159,6 +159,27 @@
         \caption{Source \href{https://abhishek-tiwari.com/post/amqp-rabbitmq-and-celery-a-visual-guide-for-dummies}{abhishek-tiwari.com}}
     \end{figure}
 \end{slide} 
+
+\subsection{}
+\begin{frame}[fragile]{Minimal Example -- Create Celery App}
+\pythonfile{celery_example.py}
+\end{frame}
+
+\subsection{}
+\begin{frame}[fragile]{Minimal Example -- Calling Tasks}
+\begin{minted}[linenos]{python}
+from celery_example import add
+
+# Fire up the task
+add.delay(1, 4)
+
+# Or a more sophisticated way
+res = add.apply_async(args=(2, 4), queue='celery')
+
+res.status  # Get status of the task
+res.get()  # Wait for the result
+\end{minted}
+\end{frame}
 
 \section{Case Study} 
 \begin{slide}{Problem Specification}
