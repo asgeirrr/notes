@@ -6,7 +6,6 @@ app = Celery(
     backend='redis://'
 )
 
-
 # Decorator creates a Celery task from a regular function
 @app.task
 def add(x, y):

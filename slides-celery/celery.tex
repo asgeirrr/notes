@@ -1,4 +1,4 @@
-\documentclass[xcolor=x11names,compress,t]{beamer}
+    \documentclass[xcolor=x11names,compress,t]{beamer}
 
 %% General document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{graphicx}
@@ -174,32 +174,127 @@ from celery_example import add
 add.delay(1, 4)
 
 # Or a more sophisticated way
-res = add.apply_async(args=(2, 4), queue='celery')
+res = add.apply_async(args=(2, 4), queue='my_queue')
 
 res.status  # Get status of the task
 res.get()  # Wait for the result
 \end{minted}
 \end{frame}
 
+\section{Task Orchestration}
+\subsection{}
+\begin{frame}[fragile]{Task Orchestration with Signatures}
+\begin{itemize}
+    \item Celery supports complex workflows using different orchestration primitives
+    \item \textbf{group, chain, chord, map, starmap, and chunks}
+    \item for these, we need to be able to create a task instance with the required parameters but not execute it
+\end{itemize}
+\begin{minted}[linenos]{python}
+from celery import signature
+
+# Signature is a task with fixed parameters that 
+# can be called later (similar to partial in FP)
+signature('tasks.add', args=(2, 2))
+
+# Signature shortcut
+s = add.s(2, 2)
+s.delay()
+\end{minted}
+\end{frame} 
+
+\subsection{}
+\begin{frame}[fragile]{Supported Workflows}
+\begin{minted}[linenos]{python}
+
+@app.task
+def xsum(numbers):
+    return sum(numbers)
+
+# 1. Chain passes result of the task to the next one.
+(add.s(2, 2) | add.s(4) | add.s(8))().get() # → 16
+
+# 2. Group executes a set of tasks in paralel.
+group(add.s(i, i) for i in range(4))() # → [0, 2, 4, 6]
+
+# 3. Chord is a group that takes a callback.
+chord((add.s(i, i) for i in range(4)), xsum.s())() # → 12
+
+# 4. Map applies task to a list of args in 1 message.
+xsum.map([1, 2, 3], [7, 10]]) # → [6, 17]
+
+\end{minted}
+\end{frame} 
+
+\subsection{}
+\begin{frame}[fragile]{Example of a Complex Workflow}
+\begin{minted}[linenos]{python}
+
+@app.task
+def create_user(username, first, last, email):
+    ...
+@app.task
+def import_contacts(user):
+    ...
+@app.task
+def send_welcome_email(user):
+    ...
+
+new_user_workflow = (
+    create_user.s() | group(import_contacts.s(),
+                            send_welcome_email.s()))
+
+new_user_workflow.delay('asterix', 'Asterix', 'Gaul', 
+                        'asterix@rychmat.eu')
+\end{minted}
+\end{frame} 
+
 \section{Case Study} 
 \begin{slide}{Problem Specification}
     \begin{itemize}
         \item We have an online payment method where each order must go through non-trivial scoring process.
         \item Problems with synchronous code:
-        \begin{itemize}
+        \begin{enumerate}
             \item Scoring may take up tu a minute.
             \item The computation is resource-heavy and must not affect processing of new orders.
             \item To increase throughput of the app, different scoring tasks must be run concurrently.
             \item Scoring cannot run in parallel for one customer.
-        \end{itemize}
+        \end{enumerate}
     \end{itemize}
 \end{slide}
 
-\begin{slide}{Implementation in Celery}
 
+\subsection{}
+\begin{frame}[fragile]{Implementation in Celery}
+\begin{minted}[linenos]{python}
+# Setup Celery in Django settings
+BROKER_URL = 'redis://localhost:6379/0'
+BROKER_TRANSPORT = 'redis'
+CELERY_SCORING_WORKERS = 10
+CELERY_QUEUES = [
+    Queue(str(i), Exchange(str(i)), routing_key=str(i)) 
+    for i in range(CELERY_SCORING_WORKERS)]
+
+# Define the scoring task
+@app.task(name='run_scoring', time_limit=3600)
+def execute_scoring(order):
+    ...
+# Run scoring when new order arrives
+execute_scoring.apply_async(
+    args=(order,),
+    queue=str(customer.pk % CELERY_WORKERS_COUNT))
+\end{minted}
+\end{frame}
+
+\begin{slide}{}
+\begin{figure}
+    \includegraphics[height=0.7\textheight]{porkey}
+\end{figure}
+
+\vspace{-1em}
+\centering
+\Large{Thanks for your attention!}
+\vspace{1em}
+
+\footnotesize{Code examples adapted from \href{http://celery.readthedocs.io}{Celery docs}.}
 \end{slide}
-
-\begin{slide}{Task Orchestration}
-\end{slide} 
-
 \end{document}
