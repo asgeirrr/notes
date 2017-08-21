@@ -1,0 +1,192 @@
+\documentclass[xcolor=x11names,compress,t]{beamer}
+
+%% General document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage[compatibility=false]{caption}
+\usepackage{subcaption}
+\usepackage[utf8x]{inputenc}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\hypersetup{
+  pdfauthor={Oskar Hollmann},
+  pdftitle={To Vim or Not to Vim},
+  breaklinks,
+  colorlinks=true,
+  linkcolor=DeepSkyBlue4,
+  urlcolor=DeepSkyBlue4,
+}
+
+%% Beamer Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\useoutertheme[subsection=false,shadow]{miniframes}
+\setbeamertemplate{navigation symbols}{}%remove navigation symbols
+
+    \defbeamertemplate{footline}{author and page number}{%
+      \usebeamercolor[fg]{page number in head/foot}%
+      \usebeamerfont{page number in head/foot}%
+      \hspace{1em}\insertshortauthor\hfill%
+      \insertpagenumber\,/\,\insertpresentationendpage\kern1em\vskip2pt%
+    }
+    \setbeamertemplate{footline}[author and page number]{}
+
+\useinnertheme{default}
+\usefonttheme{serif}
+\usepackage{kpfonts} % originally palatino font was used
+\usepackage{verbatim}
+\renewcommand*\ttdefault{cmtt}
+
+\setlength{\leftmargini}{0pt} % reduce itemize margin
+\setlength{\leftmargin}{0pt} % reduce standard text margin
+
+% Use small-caps in appropriate places
+\setbeamerfont{title like}{shape=\scshape}
+\setbeamerfont{frametitle}{shape=\scshape}
+\setbeamerfont{section in head/foot}{shape=\scshape}
+
+% Colour settings
+\setbeamercolor*{lower separation line head}{bg=DeepSkyBlue4} 
+\setbeamercolor*{normal text}{fg=black,bg=white} 
+\setbeamercolor*{alerted text}{fg=red} 
+\setbeamercolor*{example text}{fg=black} 
+\setbeamercolor*{structure}{fg=black} 
+\setbeamercolor*{palette tertiary}{fg=black,bg=black!10} 
+\setbeamercolor*{palette quaternary}{fg=black,bg=black!10} 
+
+% Fix incorrect alignment of itemize in right columns
+\makeatletter
+\define@key{beamerframe}{t}[true]{% top
+  \beamer@frametopskip=0cm plus 0\paperheight\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=\beamer@frametopskip\relax%
+  \beamer@framebottomskipautobreak=\beamer@framebottomskip\relax%
+  \def\beamer@initfirstlineunskip{}%
+}
+\makeatother
+
+% Shortcuts for the column environment
+\renewcommand{\(}{\begin{columns}[T]}
+\renewcommand{\)}{\end{columns}}
+\newcommand{\<}[1]{\begin{column}{#1}}
+\renewcommand{\>}{\end{column}}
+
+\newenvironment{slide}[1]{\subsection{#1} \begin{frame}{#1}}{\end{frame}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{To Vim or Not to Vim}
+\subtitle{The Tale of Love and Hate}
+\author[Oskar Hollmann]{\vspace{0.3em}\includegraphics[width=0.2\textwidth]{vim-logo}\\Oskar Hollmann}
+\institute{U+Python}
+\date{31.8.2017}
+
+\begin{document}
+
+\maketitle
+
+\setbeamertemplate{logo}{\includegraphics[height=0.8cm]{vim-logo}}
+
+\section{Introduction}
+\begin{slide}{How It All Started}
+    \begin{itemize} 
+        \item an open-source text editor with both GUI and command line versions released in 1991
+        \item a re-write of the classical Unix editor \href{https://en.wikipedia.org/wiki/Vi}{vi} on Amiga computers by \href{https://en.wikipedia.org/wiki/Bram_Moolenaar}{Bram Moolenaar}
+        \item originally an acronym of \emph{Vi IMitation} changed to \emph{Vi IMproved} once it superseded vi in 1993
+        \item rivalry between Vim and Emacs is known as the \emph{Editor war}\footnote{The Church of Emacs vs. The Culf of vi}
+        \item charityware
+        \item every modern editor has a Vim input mode that mimics the unique interface of vi and Vim 
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Why should anyone care?}
+    \begin{itemize} 
+        \item same editor everywhere $\longrightarrow$ productivity boost
+            \begin{itemize}
+                \item installed on most servers
+                \item easy to install in Docker containers
+            \end{itemize}
+        \item effective for touch typists thanks to different modes
+        \item most IDE functions in 70 MB of RAM
+        \item same editor for all languages (Python, JS, Clojure, LaTeX, \dots)
+        \item distraction-free coding
+        \item 100\% customizable, have only what you need there
+        \item disadvantages:
+            \begin{itemize}
+                \item steep learning curve
+                \item takes time to setup and tune
+                \item inferior debuggers
+                \item lacks sophisticated framework integration (vs. JetBrains)
+            \end{itemize}
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Why should anyone care?}
+    \begin{figure}
+        \includegraphics[scale=0.6]{editor-learning-curves}
+        \caption{The problem is the steep learning curve.}
+    \end{figure}
+\end{slide}
+
+\section{Vim Modes}
+\begin{slide}{The Design Principles of Vim}
+    \begin{enumerate} 
+        \item extensibility (non-existent in vi, taken from Emacs)
+        \item modal interface from vi (normal, insert, command, visual)
+            \begin{itemize}
+                \item no need for a mouse
+            \end{itemize}
+        \item chainable commands (unique, a sort of an own language)
+    \end{enumerate}
+    \begin{figure}
+        \includegraphics[height=0.5\textheight]{vim-modes}
+        \caption{Different Vim modes, courtesy of \url{https://freblogg.com}}
+    \end{figure}
+\end{slide}
+
+\begin{slide}{Normal Mode}
+    \begin{columns}
+        \begin{column}{0.65\textwidth}
+            \begin{itemize}
+                \item to move around the file
+                    \begin{itemize}
+                        \item h, j, k, l $\longrightarrow$ arrow keys
+                        \item gg/G $\longrightarrow$ beginning/end of file
+                        \item 20 $\longrightarrow$ apply operation to 20 lines
+                    \end{itemize}
+                \item copy/paste
+                    \begin{itemize}
+                        \item y $\longrightarrow$ yank (copy)
+                        \item d $\longrightarrow$ delete
+                        \item c $\longrightarrow$ cut
+                    \end{itemize}
+                \item search current file
+                    \begin{itemize}
+                        \item / $\longrightarrow$ start the search
+                        \item n $\longrightarrow$ goto next occurrence
+                        \item N $\longrightarrow$ goto previous occurence
+                    \end{itemize}
+                \item run commands with ``:'', e.g. ``:q'' to quit
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.35\textwidth}
+            \begin{figure}
+                \includegraphics[scale=0.42]{vim-meme}
+                \caption{The different modes are the source of constant mocking.}
+            \end{figure}
+        \end{column}
+    \end{columns}
+\end{slide}
+
+\begin{slide}{Insert Mode}
+    \begin{itemize}
+        \item input text using keyboard
+        \item behaves as traditional editor
+        \item move around with regular arrrows
+        \item enter insert mode via ``i''
+        \item back to insert mode with ESC
+    \end{itemize}
+\end{slide}
+
+\begin{slide}{Command Mode}
+    \begin{itemize}
+        \item 
+    \end{itemize}
+\end{slide}
+\end{document}
